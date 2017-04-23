@@ -6,24 +6,31 @@
 
 {% block jquery %}
 <script>
+function ChangeRight(id){
+    $.ajax({
+        "url":"/report/"+id,
+        "type":"GET",
+        "success":function(result){
+            data = $(result).find("textarea#stix");
+            $("#stix").html(data);
+        }
+    });
+};
 $(document).ready(
-        function(){
-                $('a[data-toggle="tab"]').on( 'shown.bs.tab', function (e) {
-                    $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust();
-                } );
-		$('#report_table').dataTable({
-                    "processing":true,
-                    "serverSide":true,
-                    "ajax": "{% url 'report_data' %}",
-                    "order":[0, 'desc'],
-                });
-                //$('#id_firstseen').datetimepicker({
-                //        format:'Y-m-d H:i'
-                //});
-                $('tbody').on('click', '.btn', function (e) {
-                        table_btn($(this));
-                });
-	}
+    function(){
+        $('a[data-toggle="tab"]').on( 'shown.bs.tab', function (e) {
+            .fn.dataTable.tables( {visible: true, api: true} ).columns.adjust();
+        } );
+	$('#report_table').dataTable({
+            "processing":true,
+            "serverSide":true,
+            "ajax": "{% url 'report_data' %}",
+            "order":[0, 'desc'],
+        });
+        //$('#id_firstseen').datetimepicker({
+        //        format:'Y-m-d H:i'
+        //});
+    }
 );
 </script>
 {% endblock%}
@@ -69,14 +76,11 @@ $(document).ready(
 </div><!--/.modal-->
 
 <div class="col-md-12">
+<div id="report_left" class="col-md-6">
 <h3 style="margin-top: 0">Report
 <a class="btn btn-primary btn-sm" data-toggle="modal" href="#report_form">Create</a>
 </h3>
 <hr>
-</div>
-
-
-<div id="list" class="col-md-6">
 
 <ul class="nav nav-pills">
 <!--
@@ -89,9 +93,9 @@ $(document).ready(
 <div class="tab-pane active" id="report" >
 <table id="report_table" class="table table-condensed table-stripe table-hover display" width="100%">
 <thead><tr>
-<th class="col-sm-2">ID</th>
-<th >Created</th>
-<th >Name</th>
+<th class="col-md-2">ID</th>
+<th class="col-md-4">Created</th>
+<th class="col-md-6">Name</th>
 </tr></thead>
 </table>
 </div><!--/#report-->
@@ -100,29 +104,18 @@ $(document).ready(
 
 </div><!--col-md-6-->
 
-<div class="col-md-6">
+<div id="report_right" class="col-md-6">
 <div class="panel panel-primary">
 
 <div class="panel-heading">
+STIX
 </div>
 
 <div class="panel-body">
-<table id="selected_report" class="table table-condensed">
-<tr><th class="col-md-3">Object ID</th><td><a href="/report/{{report.id}}">{{report.object_id}}</a></td></tr>
-<tr><th>Name</th><td>{{report.name}}</td></tr>
-<tr><th>Created</th><td>{{report.created}}</td></tr>
-<tr><th>Modified</th><td>{{report.modified}}</td></tr>
-<tr><th>Labels</th>
-<td>
-{% for l in report.labels.all %}
-{{l}}<br>
-{% endfor %}
-</td></tr>
-</table>
-<table class="table table-condensed">
-<tr><th>Description</th></tr>
-<tr><td><pre>{{report.description}}</pre></td></tr>
-</table>
+<div id="stix">
+<p>Click ID   -> view STIX</p>
+<p>Click Name -> view Report</p>
+</div>
 </div><!--/.panel-body-->
 </div><!--/.panel-->
 </div><!--/.col-md-6-->

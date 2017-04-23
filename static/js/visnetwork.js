@@ -33,12 +33,6 @@ function visOption(){
                 "physics":true,
         },
         "groups":{
-            "IP":{
-                shape: 'icon',
-                icon:{
-                    code:'\uf233',
-                },
-            },
             "Organization":{
                 shape: 'icon',
                 icon:{
@@ -46,14 +40,6 @@ function visOption(){
                     color:'green',
                 },
                 color:'green',
-            },
-            "Registrant":{
-                shape: 'icon',
-                icon:{
-                    code:'\uf007',
-                    color:'grey',
-                },
-                color:'grey',
             },
             "Malware":{
                 shape: 'icon',
@@ -110,9 +96,9 @@ function visOption(){
                 },
                 "minVelocity":5,
         },
-        //"manipulation": {
-        //      "enabled": false,
-        //},
+        "manipulation": {
+              "enabled": true,
+        },
     };
     return options;
 };

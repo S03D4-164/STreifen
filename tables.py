@@ -12,6 +12,8 @@ class ReportData(BaseDatatableView):
         return qs
     def render_column(self, row, column):
         if column == 'id':
-            return '<a href="/report/{0}">{0}</a>'.format(row.id)
+            return '<a onclick=ChangeRight({0}) class="btn btn-primary btn-xs">{0}</button>'.format(row.id)
+        elif column == 'name':
+            return '<a href="/report/{0}">{1}</a>'.format(row.id,row.name)
         else:
             return super(ReportData, self).render_column(row, column)

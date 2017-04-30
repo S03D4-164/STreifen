@@ -2,7 +2,10 @@ from django import forms
 from .models import *
 import STreifen.models as mymodels
 
-class CreateRelationshipForm(forms.ModelForm):
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+class RelationshipForm(forms.ModelForm):
     class Meta:
         model = Relationship
         fields = [
@@ -12,7 +15,7 @@ class CreateRelationshipForm(forms.ModelForm):
             "description",
         ]
 
-class CreateSightingForm(forms.ModelForm):
+class SightingForm(forms.ModelForm):
     class Meta:
         model = Sighting
         fields = [
@@ -22,7 +25,7 @@ class CreateSightingForm(forms.ModelForm):
             "last_seen",
         ]
 
-class CreateThreatActorForm(forms.ModelForm):
+class ThreatActorForm(forms.ModelForm):
     class Meta:
         model = ThreatActor
         fields = [
@@ -31,8 +34,11 @@ class CreateThreatActorForm(forms.ModelForm):
             "labels",
             "aliases",
         ]
+        widgets = {
+            "labels":forms.CheckboxSelectMultiple(),
+        }
 
-class CreateMalwareForm(forms.ModelForm):
+class MalwareForm(forms.ModelForm):
     class Meta:
         model = Malware
         fields = [
@@ -41,7 +47,7 @@ class CreateMalwareForm(forms.ModelForm):
             "labels",
         ]
 
-class CreateAttackPatternForm(forms.ModelForm):
+class AttackPatternForm(forms.ModelForm):
     class Meta:
         model = AttackPattern
         fields = [
@@ -49,15 +55,21 @@ class CreateAttackPatternForm(forms.ModelForm):
             "description",
         ]
 
-class CreateIdentityForm(forms.ModelForm):
+class IdentityForm(forms.ModelForm):
     class Meta:
         model = Identity
         fields = [
             "name",
             "identity_class",
             "sectors",
+            "labels",
             "description",
         ]
+
+class DefinedRelationshipForm(forms.Form):
+    relation = forms.ModelChoiceField(
+        queryset=DefinedRelationship.objects.all()
+    )
 
 class SelectObjectForm(forms.Form):
     type = forms.ModelChoiceField(
@@ -78,32 +90,45 @@ def get_obj_from_id(soi):
     m = ""
     for s in sot.split('-'):
         m += s.capitalize()
-    obj = getattr(mymodels, m).objects.get(object_id=soi)
-    return obj
+    obj = getattr(mymodels, m).objects.filter(object_id=soi)
+    if obj.count() == 1:
+        return obj.all()[0]
+    else:
+        logging.error("Object not found: "+soi.object_id)
+    return None
 
 def object_choices(ids=STIXObjectID.objects.all()):
     choices = ()
     for soi in ids:
         obj = get_obj_from_id(soi)
         name = ""
-        if obj.object_type.name == 'relationship':
-            src = get_obj_from_id(obj.source_ref)
-            tgt = get_obj_from_id(obj.target_ref)
-            rel = obj.relationship_type.name
-            name = " ".join([src.name, rel, tgt.name])
-        elif obj.object_type.name == 'sighting':
-            sor = get_obj_from_id(obj.sighting_of_ref)
-            tgt = []
-            for wsr in obj.where_sighted_refs.all():
-                i = get_obj_from_id(wsr)
-                tgt.append(i.name)
-            name = ",".join(tgt) + " sighted " + sor.name
+        if not obj:
+            logging.error("Could not get object: "+soi.object_id)
+            soi.delete()
         else:
-            name = obj.name
-        choices += ((
-            obj.object_id.id,
-            obj.object_type.name + " : " + name,
-        ),)
+            if obj.object_type.name == 'relationship':
+                src = get_obj_from_id(obj.source_ref)
+                tgt = get_obj_from_id(obj.target_ref)
+                rel = obj.relationship_type.name
+                if src and tgt and rel:
+                    name = " ".join([src.name, rel, tgt.name])
+            elif obj.object_type.name == 'sighting':
+                sor = get_obj_from_id(obj.sighting_of_ref)
+                tgt = []
+                for wsr in obj.where_sighted_refs.all():
+                    i = get_obj_from_id(wsr)
+                    if i:
+                        tgt.append(i.name)
+                if sor and tgt:
+                    name = ",".join(tgt) + " sighted " + sor.name
+            else:
+                if hasattr(obj, 'name'):
+                    name = obj.name
+            if name:
+                choices += ((
+                    obj.object_id.id,
+                    obj.object_type.name + " : " + name,
+                ),)
     return choices
 
 class AddObjectForm(forms.Form):
@@ -114,7 +139,13 @@ class AddObjectForm(forms.Form):
         super(AddObjectForm, self).__init__(*args, **kwargs)
         self.fields["objects"].choices = object_choices()
 
-class CreateReportForm(forms.ModelForm):
+class ReportLabelForm(forms.Form):
+    label = forms.ModelMultipleChoiceField(
+        queryset=ReportLabel.objects.all(),
+        widget=forms.CheckboxSelectMultiple(attrs={"checked":""})
+    )
+
+class ReportForm(forms.ModelForm):
     class Meta:
         model = Report
         fields = [
@@ -129,20 +160,16 @@ class CreateReportForm(forms.ModelForm):
             "object_refs":forms.CheckboxSelectMultiple(),
         }
     def __init__(self, *args, **kwargs):
-        super(CreateReportForm, self).__init__(*args, **kwargs)
-        self.fields["labels"].required = False
-        self.fields["description"].required = False
-        self.fields["published"].required = False
-        self.fields["object_refs"].required = False
+        super(ReportForm, self).__init__(*args, **kwargs)
 
 class TypeSelectForm(forms.Form):
     types = forms.ModelMultipleChoiceField(
         queryset=STIXObjectType.objects.all(),
-        widget=forms.CheckboxSelectMultiple()
+        widget=forms.CheckboxSelectMultiple(attrs={"checked":""})
     )
     relation = forms.ModelMultipleChoiceField(
         queryset=RelationshipType.objects.all(),
-        widget=forms.CheckboxSelectMultiple()
+        widget=forms.CheckboxSelectMultiple(attrs={"checked":""})
     )
     def __init__(self, *args, **kwargs):
         super(TypeSelectForm, self).__init__(*args, **kwargs)

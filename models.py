@@ -41,7 +41,7 @@ class DefinedRelationship(models.Model):
 
 class STIXObject(models.Model):
     object_type = models.ForeignKey(STIXObjectType, blank=True, null=True)
-    object_id = models.ForeignKey(STIXObjectID, blank=True, null=True)
+    object_id = models.OneToOneField(STIXObjectID, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     #createdby_ref = models.ForeignKey(STIXObjectID, related_name="createdby_ref")
@@ -49,6 +49,9 @@ class STIXObject(models.Model):
     class Meta:
         unique_together = (("object_type", "object_id"),)
         ordering = ["object_type", "object_id"]
+    def delete(self):
+        STIXObjectID.objects.get(object_id=self.object_id).delete()
+        
 
 class ReportLabel(models.Model):
     value = models.CharField(max_length=250, unique=True)
@@ -93,6 +96,7 @@ class IdentityLabel(models.Model):
 
 class IndustrySector(models.Model):
     value = models.CharField(max_length=250, unique=True)
+    description = models.TextField(blank=True, null=True)
     def __str__(self):
         return self.value
     class Meta:
@@ -111,6 +115,7 @@ class Identity(STIXObject):
     #identity_class = models.ForeignKey(IdentityClass, blank=True)
     description = models.TextField(blank=True, null=True)
     sectors = models.ManyToManyField(IndustrySector, blank=True)
+    labels = models.ManyToManyField(IdentityLabel, blank=True)
     def save(self, *args, **kwargs):
         self = _set_id(self, 'identity')
         super(Identity, self).save(*args, **kwargs)
@@ -159,6 +164,7 @@ class ThreatActorLabel(models.Model):
 
 class ThreatActorAlias(models.Model):
     name = models.CharField(max_length=250, unique=True)
+    description = models.TextField(blank=True, null=True)
     def __str__(self):
         return self.name
     class Meta:
@@ -182,6 +188,11 @@ class Relationship(STIXObject):
     target_ref = models.ForeignKey(STIXObjectID, related_name='target_ref')
     relationship_type = models.ForeignKey(RelationshipType)
     description = models.TextField(blank=True, null=True)
+    def __str__(self):
+        src = self.source_ref.object_id
+        tgt = self.target_ref.object_id
+        rel = self.relationship_type.name
+        return " ".join([src, rel, tgt])
     def save(self, *args, **kwargs):
         self = _set_id(self, 'relationship')
         super(Relationship, self).save(*args, **kwargs)

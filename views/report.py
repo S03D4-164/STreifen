@@ -74,9 +74,10 @@ def stix_report(rep):
     return bundle
 
 def report_list(request):
-    form = CreateReportForm()
+    form = ReportForm()
+    lform = ReportLabelForm()
     if request.method == "POST":
-        form = CreateReportForm(request.POST)
+        form = ReportForm(request.POST)
         if form.is_valid():
             name = form.cleaned_data["name"]
             description = form.cleaned_data["description"]
@@ -91,6 +92,7 @@ def report_list(request):
                 r.save()
     c = {
         "form": form,
+        "lform": lform,
     }
     return render(request, 'report_list.html', c)
 
@@ -100,24 +102,28 @@ def _object_form(name, request=None, report=None):
         if request.method == 'POST':
             post = request.POST
     if name == "identity":
-        return CreateIdentityForm(post)
+        return IdentityForm(post)
     elif name == "attack-pattern":
-        return CreateAttackPatternForm(post)
+        return AttackPatternForm(post)
     elif name == "malware":
-        return CreateMalwareForm(post)
+        return MalwareForm(post)
     elif name == "threat-actor":
-        return CreateThreatActorForm(post)
+        return ThreatActorForm(post)
     elif name == "relationship":
-        form = CreateRelationshipForm(post)
+        form = RelationshipForm(post)
         if report:
             choices = myforms.object_choices(
-                ids=report.object_refs.all()
+                ids=report.object_refs.all().exclude(
+                    object_id__startswith = 'relationship'
+                ).exclude(
+                    object_id__startswith = 'sighting'
+                )
             )
             form.fields["source_ref"].choices = choices
             form.fields["target_ref"].choices = choices
         return form
     elif name == "sighting":
-        form = CreateSightingForm(post)
+        form = SightingForm(post)
         if report:
             wsr = myforms.object_choices(
                 ids=report.object_refs.filter(
@@ -140,7 +146,7 @@ def report_view(request, id):
     report = Report.objects.get(id=id)
     stix = stix_report(report)
     #print(stix)
-    form = CreateReportForm(instance=report)
+    form = ReportForm(instance=report)
     soform = SelectObjectForm()
     selected = None
     coform = None
@@ -148,10 +154,13 @@ def report_view(request, id):
     if request.method == "POST":
         #print(request.POST)
         if 'update' in request.POST:
-            form = CreateReportForm(request.POST, instance=report)
+            form = ReportForm(request.POST, instance=report)
             if form.is_valid():
                 form.save()
-                redirect("/report/"+id)
+                return redirect("/report/"+id)
+        elif 'delete' in request.POST:
+            report.delete()
+            return redirect("/report/")
         elif 'select' in request.POST:
             sotid = request.POST.get('select')
             sot = STIXObjectType.objects.get(id=sotid)
@@ -179,7 +188,7 @@ def report_view(request, id):
                 redirect("/report/"+id)
 
     objects = []
-    for ref in report.object_refs.all():
+    for ref in report.object_refs.all().order_by("id"):
         objects.append(myforms.get_obj_from_id(ref))
     form.fields["object_refs"].choices = myforms.object_choices(
         report.object_refs.all()

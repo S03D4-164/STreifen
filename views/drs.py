@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.db.models import Q
 from django.utils.safestring import SafeString
@@ -7,24 +8,28 @@ from ..forms import *
 import json
 
 def vis_drs(request):
+    c = {"tsform":TypeSelectForm()}
+    return render(request, "drs_vis.html", c)
+
+def data_drs(request):
     tsform = TypeSelectForm()
     nodes = []
     edges = []
     drs = None
     if request.method == "POST":
+        #print(request.POST)
         tsform = TypeSelectForm(request.POST)
         if tsform.is_valid():
             types = tsform.cleaned_data["types"]
-            print(types)
+            #print(types)
             rels = tsform.cleaned_data["relation"]
-            print(rels)
-            drs = DefinedRelationship.objects.exclude(
-                type__in=rels
-            ).exclude(
+            #print(rels)
+            drs = DefinedRelationship.objects.filter(
                 Q(source__in=types)|Q(target__in=types),
+            ).filter(
+                type__in=rels
             )
-    if not drs: 
-        drs = DefinedRelationship.objects.all()
+            
     for dr in drs:
         for sot in (dr.source, dr.target):
             node = {
@@ -43,7 +48,6 @@ def vis_drs(request):
     dataset = {
         'nodes': nodes,
         'edges': edges,
-        'tsform':tsform,
     }
-    return render(request, "visualize_view.html", dataset)
+    return JsonResponse(dataset)
         

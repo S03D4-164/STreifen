@@ -1,55 +1,7 @@
-{% extends "base.html" %}
+{% extends "base_view.html" %}
 
-{% block title %}
-<title>Report: {{report.name}}</title>
-{% endblock %}
-
-{% block jquery %}
-<script>
-$(document).ready(
-    function(){
-        $("select#id_type").change(function(){
-            $.ajax({
-                type: 'POST',
-                data: {
-                    select:$('#id_type').val(),
-                    csrfmiddlewaretoken:'{{csrf_token}}',
-                },
-                success: function(result){
-                    form = $(result).find("#create_form");
-                    $("#create_form").html(form);
-                }
-            });
-        });
-       	$(".report_form").toggle();
-	$('.btn-toggle').click(function(){
-	    if($(this).attr("value")=="report_form"){
-       	        $(".report_form").toggle();
-	    };
-	});
-        $('a[data-toggle="tab"]').on( 'shown.bs.tab', function (e) {
-            $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust();
-        } );
-        $('#identity_table').dataTable({
-            "processing":true,
-            "serverSide":true,
-            "ajax": {
-                "url": "/data/identity",
-                "data": {'subcluster':{{report.id}}},
-            },
-            "order":[0, 'desc'],
-        });
-        //$('#id_firstseen').datetimepicker({
-        //        format:'Y-m-d H:i'
-        //});
-    }
-);
-</script>
-{% endblock%}
-
-{% block container %}
-
-<div class="modal" id="report_form" role="dialog">
+{% block modal_edit %}
+<div class="modal" id="obj_form" role="dialog">
 <div class="modal-dialog"><div class="modal-content">
 <div class="modal-header">
 <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -62,8 +14,10 @@ $(document).ready(
 <div class="col-md-7">
 Name:
 {{form.name}}
+<hr>
 Published:
 {{form.published}}
+<hr>
 Description:
 {{form.description}}
 </div>
@@ -72,215 +26,30 @@ Labels:
 {{form.labels}}
 </div>
 </div>
-<div class="col-md-12">
-<hr>
-Object Refs:
-{{form.object_refs}}
-</div>
-</div>
 </table>
 <input class="btn btn-primary btn-sm" type="submit" name="update" value="Update">
-<input class="btn btn-danger btn-sm" type="submit" name="delete" value="Delete">
 </form>
 </div><!--/.modal-body-->
 </div><!--/.modal-content-->
 </div><!--/.modal-dialog-->
 </div><!--/.modal-->
+</div><!--/.modal-->
 
-<div class="modal" id="addobj_form" role="dialog">
+
+<div class="modal" id="detach_form" role="dialog">
 <div class="modal-dialog"><div class="modal-content">
 <div class="modal-header">
 <button type="button" class="close" data-dismiss="modal">&times;</button>
-<h4 class="modal-title">Add Object</h4>
+<h4 class="modal-title">Detach Ref</h4>
 </div>
 <div class="modal-body">
-<form id="add_form" method="post">{% csrf_token %}
-{{aoform}}
-<input class="btn btn-primary btn-sm" type="submit" name="add_obj" value="Add">
+<form method="post">{% csrf_token %}
+{{rform.object_refs}}
+<input class="btn btn-warning btn-sm" type="submit" name="detach" value="Detach">
 </form>
 </div><!--/.modal-body-->
 </div><!--/.modal-content-->
 </div><!--/.modal-dialog-->
 </div><!--/.modal-->
-
-<div class="modal" id="object_form" role="dialog">
-<div class="modal-dialog"><div class="modal-content">
-<div class="modal-header">
-<button type="button" class="close" data-dismiss="modal">&times;</button>
-<h4 class="modal-title">Create Object</h4>
-</div>
-<div class="modal-body">
-<form id="select_form" method="post">{% csrf_token %}
-<div >{{soform}}</div>
-<div id="create_form" >
-{% if coform %}
-<hr>
-<table>
-{{coform.as_table}}
-</table>
-<input class="btn btn-primary btn-sm" type="submit" name="create_obj" value="Create">
-{% endif %}
-</div><!--/#create_form-->
-</form>
-</div><!--/.modal-body-->
-</div><!--/.modal-content-->
-</div><!--/.modal-dialog-->
-</div><!--/.modal-->
-
-
-<div class="col-md-12" id="report" >
-
-<div class="panel panel-primary">
-
-<div class="panel-heading">
-<a class="btn btn-primary btn-xs" href="">{{report.id}}</a>
-<a data-toggle="collapse" href="#report_body" style="color:white">
-{{report.object_id}}
-</a>
-<a class="btn btn-primary btn-xs" data-toggle="modal" href="#report_form">Edit</a>
-</div><!--.panel-heading-->
-
-<div id="report_body" class="panel-collapse collapse in">
-
-<div class="panel-body">
-
-<div class="col-md-12">
-
-<div class="col-md-3">
-<table class="table table-condensed">
-<tr><th class="col-md-3">Name</th>
-<td>{{report.name}}</td>
-</tr>
-<tr><th class="col-md-3">Labels</th>
-<td>
-{% for l in report.labels.all %}
-{{l.value}}<br>
-{% endfor %}
-</td></tr>
-</table>
-</div>
-
-<div class="col-md-3">
-<table class="table table-condensed">
-<tr>
-<th class="col-md-4">Created</th><td>{{report.created}}</td></tr>
-<th >Modified</th><td>{{report.modified}}</td></tr>
-<th >Published</th><td>{{report.published}}</td></tr>
-</table>
-</div>
-
-<div class="col-md-6">
-<table class="table table-condensed">
-<tr>
-<th class="col-md-3">Description</th>
-<td><pre>{{report.description}}</pre></td>
-</tr>
-</table>
-</div>
-
-</div>
-
-</div><!--/.panel-body-->
-
-</div><!--/.collapse-->
-
-</div><!--/.panel-->
-
-</div><!--/report-->
-
-<div class="col-md-12">
-<div class="panel panel-primary">
-<div class="panel-heading">
-<a data-toggle="collapse" href="#collapse2" style="color:white;">
-STIX
-</a></div><!--/.panel-heading-->
-<div id="collapse2"class="panel-collapse collapse">
-<div class="panel-body">
-<textarea id="stix" read-only style="height:500px;">{{stix}}</textarea>
-</div><!--/.panel-body-->
-</div><!--/.panel-collapse-->
-</div><!--/.panel-->
-</div>
-
-
-<div id="tables" class="col-md-12">
-<ul class="nav nav-pills">
-  <li class="active"><a data-toggle="tab" href="#objects">Objects</a></li>
-</ul>
-
-<div class="panel panel-primary">
-<div class="panel-heading"></div>
-<div class="panel-body">
-
-<div class="tab-content">
-
-<div class="tab-pane active" id="objects" >
-<table id="objects_table" class="table table-condensed table-stripe table-hover display" width="100%">
-<a class="btn btn-info btn-xs" data-toggle="modal" href="#object_form">Create</a>
-<a class="btn btn-default btn-xs" data-toggle="modal" href="#addobj_form">Add</a>
-<thead><tr>
-<th class="col-sm-1">ID</th>
-<th class="col-sm-2">Type</th>
-<th class="col-sm-6">Name</th>
-<th class="col-sm-4">Object ID</th>
-</tr></thead>
-<tbody>
-{% for o in objects %}
-<tr>
-<td><a class="btn btn-primary btn-xs">{{o.id}}</a></td>
-<td>{{o.object_type.name}}</td>
-<td>
-{% ifequal o.object_type.name 'relationship' %}
-{% for s in objects %}
-{% ifequal s.object_id o.source_ref %}
-<a class="btn btn-primary btn-xs">{{s.object_type.name}}</a>{{s.name}}
-{% endifequal%}
-{% endfor %}
-
-<a class="btn btn-default btn-xs">{{o.relationship_type.name}}</a>
-
-{% for t in objects %}
-{% ifequal t.object_id o.target_ref %}
-<a class="btn btn-primary btn-xs">{{t.object_type.name}}</a>{{t.name}}
-{% endifequal%}
-{% endfor %}
-
-{% endifequal %}
-
-{{o.name}}
-</td>
-<td>{{o.object_id.object_id}}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div><!--/#identity-->
-
-<div class="tab-pane" id="attack-pattern" >
-<table id="attack-pattern_table" class="table table-condensed table-stripe table-hover display" width="100%">
-<thead>
-<th class="col-sm-1">ID</th>
-<th class="col-sm-1">Ref</th>
-<th class="col-sm-2">First seen</th>
-</thead>
-</table>
-</div><!--/#attack-pattern-->
-
-<div class="tab-pane" id="target" >
-<table id="target_table" class="table table-condensed table-stripe table-hover display" width="100%">
-<thead>
-<th class="col-sm-1">ID</th>
-<th class="col-sm-1">Ref</th>
-<th class="col-sm-2">First seen</th>
-</thead>
-</table>
-</div><!--/#attack-pattern-->
-
-</div><!--/tab-content-->
-
-</div><!--/.panel-body-->
-</div><!--/.panel-->
-
-</div><!--/tables-->
 
 {% endblock %}

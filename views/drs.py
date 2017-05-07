@@ -1,15 +1,14 @@
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.db.models import Q
-from django.utils.safestring import SafeString
 
 from ..models import *
 from ..forms import *
 import json
 
-def vis_drs(request):
+def viz_drs(request):
     c = {"tsform":TypeSelectForm()}
-    return render(request, "drs_vis.html", c)
+    return render(request, "drs_viz.html", c)
 
 def data_drs(request):
     tsform = TypeSelectForm()

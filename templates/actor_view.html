@@ -5,6 +5,9 @@
 {% endblock %}
 
 {% block jquery %}
+<script type="text/javascript" src="/static/d3/d3.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/psd3/psd3.css">
+<script type="text/javascript" src="/static/psd3/psd3.js"></script>
 <script>
 $(document).ready(
     function(){
@@ -106,8 +109,8 @@ Labels:
 <div class="panel-heading">
 <div  >
 <h4>
-<a class="btn btn-primary btn-xs" href="">{{actor.id}}</a>
-<a class="btn btn-primary btn-xs" data-toggle="modal" href="#actor_form">Edit</a>
+<a class="btn btn-default btn-xs" href="">{{actor.id}}</a>
+<a class="btn btn-warning btn-xs" data-toggle="modal" href="#actor_form">Edit</a>
 <a data-toggle="collapse" href="#actor_body" style="color:white">
 {{actor.name}}
 ({{actor.object_id}})
@@ -201,16 +204,24 @@ STIX
 -->
 <thead><tr>
 <th class="col-md-1">ID</th>
-<th class="col-md-3">Type</th>
-<th class="col-md-3">Name</th>
+<th class="col-md-2">Type</th>
+<th class="col-md-2">Name</th>
+<th class="col-md-2">Label</th>
 <th class="col-md-5">Object ID</th>
 </tr></thead>
 <tbody>
 {% for o in objects %}
 <tr>
-<td><a href="/{{o.object_type.name}}/{{o.id}}">{{o.id}}</td>
+<td><a class="btn btn-primary btn-xs"href="/{{o.object_type.name}}/{{o.id}}">{{o.id}}</td>
 <td>{{o.object_type.name}}</td>
 <td>{{o.name}}</td>
+<td>
+{% if o.labels %}
+{% for l in o.labels.all %}
+{{l.value}}<br>
+{% endfor %}
+{% endif %}
+</td>
 <td>{{o.object_id.object_id}}</td>
 </tr>
 {% endfor %}

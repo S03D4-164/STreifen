@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block container %}
+
+<script type="text/javascript" src="/static/d3/d3.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/psd3/psd3.css">
+<script type="text/javascript" src="/static/psd3/psd3.js"></script>
+
+
+<div id="vis" class="col-md-12">
+<div id="chartContainer" style="position:relative;"></div>
+<script type="text/javascript">
+var data = [{% for actor, target in data.items %}
+    {
+        value: {{target.value}},
+        label: "{{actor}}",
+        inner:[{% for label, value in target.inner.items %}
+        {
+            value: {{value}},
+            label: "{{label}}",
+        },
+        {% endfor %}]
+    },
+    {% endfor %}];
+var config = {
+    containerId: "chartContainer",
+    width: 500,
+    height: 500,
+    data: data,
+    label: function(d) {return d.data.label + ":" + d.data.value;},
+    tooltip: function(d) {return d.label + ":" + d.value ;},
+    transition: "linear",
+    transitionDuration: 100,
+    donutRadius: 50,
+    gradient: false,
+    colors: d3.scale.category20(),
+    stroke: "#eee",
+    strokeWidth: 3,
+    highlightColor: "#c00"
+
+};
+var pie = new psd3.Pie(config);
+</script>
+</div>
+
+{% endblock %}

@@ -9,25 +9,27 @@
 {% endblock %}
 
 {% block defaultlib %}
-
 <script type="text/javascript" charset="utf8" src="/static/datatables/js/jquery.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap-theme.min.css">
+<script type="text/javascript" src="/static/bootstrap/js/bootstrap.min.js"></script>
+{% endblock %}
 
-<link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
-<link rel="stylesheet" href="/static/bootstrap/css/bootstrap-theme.min.css">
-<script src="/static/bootstrap/js/bootstrap.min.js"></script>
-
+{% block datatableslib %}
 <link rel="stylesheet" type="text/css" href="/static/datatables/css/jquery.dataTables.min.css">
 <script type="text/javascript" charset="utf8" src="/static/datatables/js/jquery.dataTables.min.js"></script>
+{% endblock %}
 
+{% block visjslib %}
+<link rel="stylesheet" type="text/css" href="/static/font-awesome/css/font-awesome.min.css">
 <link href="/static/vis/vis.min.css" type="text/css" rel="stylesheet"></link>
 <script type="text/javascript" src="/static/vis/vis.min.js"></script>
-<link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css">
-
-<link rel="stylesheet" href="/static/css/main.css">
 <script type="text/javascript" src="/static/js/visnetwork.js"></script>
 {% endblock %}
-{% block jquery %}
-{% endblock %}
+
+<link rel="stylesheet" type="text/css" href="/static/css/main.css">
+
+{% block jquery %}{% endblock %}
 
 </head>
 
@@ -49,6 +51,10 @@
 
 <li><a href="/identity/">Identity</a></li>
 
+<li><a href="/timeline/">Timeline</a></li>
+
+<li><a href="/viz/drs/">Relationship</a></li>
+
 </ul>
 </nav>
 {% endblock %}
@@ -57,20 +63,17 @@
 {% if messages %}
 <div class="col-md-12">
 <ul class="messages list-group">
-    {% for message in messages %}
-    <li{% if message.tags %} class="list-group-item list-group-item-{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
+{% for message in messages %}
+<li{% if message.tags %} class="list-group-item list-group-item-{{ message.tags }}"{% endif %}>{{ message }}</li>
+{% endfor %}
 </ul>
 </div>
 {% endif %}
 {% endblock %}
 
-{% block container %}
+{% block container %}{% endblock %}
 
-
-{% endblock %}
-
-</div><!--/.container-->
+</div><!--/.container-fluid-->
 
 </body>
 </html>

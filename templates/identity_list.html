@@ -4,6 +4,7 @@
 <title>Identity</title>
 {% endblock %}
 
+{% block visjslib %}{% endblock %}
 {% block jquery %}
 <script>
 function ChangeRight(id){
@@ -37,6 +38,7 @@ $(document).ready(
 
 {% block container %}
 
+{% block modal %}
 <div class="modal" id="identity_form" role="dialog">
 <div class="modal-dialog">
 <div class="modal-content">
@@ -52,11 +54,11 @@ $(document).ready(
 
 <div class="col-md-6">Name:{{form.name}}
 <hr >Class:{{form.identity_class}}
-<hr>Labels:{{form.labels}}
+<hr>Description:{{form.description}}
 </div>
 
 <div class="col-md-6">Sectors:{{form.sectors}}
-<hr>Description:{{form.description}}
+Labels:{{form.labels}}
 </div>
 
 </div>
@@ -67,40 +69,28 @@ $(document).ready(
 </div><!--/.modal-content-->
 </div><!--/.modal-dialog-->
 </div><!--/.modal-->
+{% endblock %}
 
 <div class="col-md-12">
-<div id="report_left" class="col-md-6">
+
+<div id="left_pane" class="col-md-6">
 <h3 style="margin-top: 0">Identity
 <a class="btn btn-primary btn-sm" data-toggle="modal" href="#identity_form">Create</a>
-<!--
-<a class="btn btn-primary btn-sm" data-toggle="modal" href="#import_form">Import</a>
--->
 </h3>
 <hr>
 
-<ul class="nav nav-pills">
-<!--
-  <li class="active" ><a data-toggle="tab" href="#report">Report({{recordsTotal|length}})</a></li>
--->
-</ul>
-
-<div class="tab-content">
-
-<div class="tab-pane active" id="identity" >
 <table id="identity_table" class="table table-condensed table-stripe table-hover display" width="100%">
 <thead><tr>
 <th class="col-md-2">ID</th>
 <th class="col-md-4">Name</th>
-<th class="col-md-6">Labels</th>
+<th class="col-md-3">Sectors</th>
+<th class="col-md-3">Labels</th>
 </tr></thead>
 </table>
-</div><!--/#identity-->
 
-</div><!--/tab-content-->
+</div><!--/.left-pane-->
 
-</div><!--col-md-6-->
-
-<div id="report_right" class="col-md-6">
+<div id="right_pane" class="col-md-6">
 <div class="panel panel-primary">
 
 <div class="panel-heading">
@@ -110,6 +100,6 @@ $(document).ready(
 </table>
 </div><!--/.panel-body-->
 </div><!--/.panel-->
-</div><!--/.col-md-6-->
+</div><!--/.right_pane-->
 
 {% endblock %}

@@ -12,7 +12,7 @@ class ReportData(BaseDatatableView):
         return qs
     def render_column(self, row, column):
         if column == 'id':
-            return '<a onclick=ChangeRight({0}) class="btn btn-primary btn-xs">{0}</button>'.format(row.id)
+            return '<a onclick=ChangeRight({0}) class="btn btn-default btn-xs">{0}</button>'.format(row.id)
         elif column == 'name':
             return '<a href="/report/{0}">{1}</a>'.format(row.id,row.name)
         elif column == 'labels':
@@ -36,14 +36,15 @@ class ThreatActorData(BaseDatatableView):
     max_display_length = 100
     def render_column(self, row, column):
         if column == 'id':
-            return '<a onclick=ChangeRight({0}) class="btn btn-primary btn-xs">{0}</button>'.format(row.id)
+            return '<a class="btn btn-default btn-xs">{0}</button>'.format(row.id)
         elif column == 'name':
             return '<a href="/actor/{0}">{1}</a>'.format(row.id,row.name)
         elif column == 'aliases':
-            a = ""
+            a = []
             for alias in row.aliases.all():
-                a += alias.name+"<br>"
-            return a
+                if not alias.name in a:
+                    a.append(alias.name)
+            return " / ".join(a)
         else:
             return super(ThreatActorData, self).render_column(row, column)
     def filter_queryset(self, qs):
@@ -55,12 +56,12 @@ class ThreatActorData(BaseDatatableView):
 
 class IdentityData(BaseDatatableView):
     model = Identity
-    columns = ['id', 'name', 'labels']
-    order_columns = ['id', 'name', 'labels']
+    columns = ['id', 'name', 'sectors', 'labels']
+    order_columns = ['id', 'name', 'sectors', 'labels']
     max_display_length = 100
     def render_column(self, row, column):
         if column == 'id':
-            return '<a onclick=ChangeRight({0}) class="btn btn-primary btn-xs">{0}</button>'.format(row.id)
+            return '<a onclick=ChangeRight({0}) class="btn btn-default btn-xs">{0}</button>'.format(row.id)
         elif column == 'name':
             return '<a href="/identity/{0}">{1}</a>'.format(row.id,row.name)
         elif column == 'labels':
@@ -68,6 +69,11 @@ class IdentityData(BaseDatatableView):
             for label in row.labels.all():
                 l += label.value+"<br>"
             return l
+        elif column == 'sectors':
+            s = ""
+            for sector in row.sectors.all():
+                s += sector.value+"<br>"
+            return s
         else:
             return super(IdentityData, self).render_column(row, column)
     def filter_queryset(self, qs):

@@ -1,9 +1,37 @@
 from django import forms
+from django.db.models import Q
+
 from .models import *
 import STreifen.models as mymodels
 
+from operator import itemgetter
+
 import logging
 logging.basicConfig(level=logging.DEBUG)
+
+class InputForm(forms.Form):
+    input = forms.CharField(
+        widget=forms.Textarea(
+            attrs={'style':'height:400px;'}
+        )
+    )
+
+class TimelineForm(forms.Form):
+    models = [
+        "report",
+        "sighting",
+        #"campaign",
+        #"attack-pattern",
+    ]
+    objects = forms.ModelMultipleChoiceField(
+        queryset=STIXObjectType.objects.filter(
+            name__in=models
+        ),
+        widget=forms.CheckboxSelectMultiple(attrs={"checked":""})
+    )
+    def __init__(self, *args, **kwargs):
+        super(TimelineForm, self).__init__(*args, **kwargs)
+        self.fields["objects"].required = False
 
 class RelationshipForm(forms.ModelForm):
     class Meta:
@@ -34,9 +62,9 @@ class ThreatActorForm(forms.ModelForm):
             "labels",
             "aliases",
         ]
-        widgets = {
-            "labels":forms.CheckboxSelectMultiple(),
-        }
+        #widgets = {
+        #    "labels":forms.CheckboxSelectMultiple(),
+        #}
 
 class MalwareForm(forms.ModelForm):
     class Meta:
@@ -65,6 +93,10 @@ class IdentityForm(forms.ModelForm):
             "labels",
             "description",
         ]
+    def __init__(self, *args, **kwargs):
+        super(IdentityForm, self).__init__(*args, **kwargs)
+        self.fields["identity_class"].initial = "organization"
+
 
 class DefinedRelationshipForm(forms.Form):
     relation = forms.ModelChoiceField(
@@ -85,6 +117,25 @@ class SelectObjectForm(forms.Form):
         ),
     )
 
+def get_related_obj(obj):
+    rels = Relationship.objects.filter(
+        Q(source_ref__object_id__startswith=obj.object_id)\
+        |Q(target_ref__object_id__startswith=obj.object_id)\
+    )
+    objects = [obj]
+    for rel in rels.all():
+        #if not rel in objects:
+        #    objects.append(rel)
+        o = None
+        if rel.source_ref == obj.object_id:
+            o = get_obj_from_id(rel.target_ref)
+        elif rel.target_ref == obj.object_id:
+            o = get_obj_from_id(rel.source_ref)
+        if o:
+            if not o in objects:
+                objects.append(o)
+    return rels, objects
+
 def get_obj_from_id(soi):
     sot = soi.object_id.split('--')[0]
     m = ""
@@ -98,13 +149,14 @@ def get_obj_from_id(soi):
     return None
 
 def object_choices(ids=STIXObjectID.objects.all()):
-    choices = ()
+    choices = []
     for soi in ids:
         obj = get_obj_from_id(soi)
         name = ""
         if not obj:
             logging.error("Could not get object: "+soi.object_id)
-            soi.delete()
+            if soi.id:
+                soi.delete()
         else:
             if obj.object_type.name == 'relationship':
                 src = get_obj_from_id(obj.source_ref)
@@ -125,10 +177,13 @@ def object_choices(ids=STIXObjectID.objects.all()):
                 if hasattr(obj, 'name'):
                     name = obj.name
             if name:
-                choices += ((
+                choices.append((
+                #choices += ((
                     obj.object_id.id,
                     obj.object_type.name + " : " + name,
-                ),)
+                ))
+    if choices:
+        choices.sort(key=itemgetter(1))
     return choices
 
 class AddObjectForm(forms.Form):
@@ -145,6 +200,16 @@ class ReportLabelForm(forms.Form):
         widget=forms.CheckboxSelectMultiple(attrs={"checked":""})
     )
 
+class ReportRefForm(forms.ModelForm):
+    class Meta:
+        model = Report
+        fields = [
+            "object_refs",
+        ]
+        widgets = {
+            "object_refs":forms.CheckboxSelectMultiple(),
+        }
+
 class ReportForm(forms.ModelForm):
     class Meta:
         model = Report
@@ -153,14 +218,14 @@ class ReportForm(forms.ModelForm):
             "labels",
             "description",
             "published",
-            "object_refs",
+            #"object_refs",
         ]
         widgets = {
             "labels":forms.CheckboxSelectMultiple(),
-            "object_refs":forms.CheckboxSelectMultiple(),
+            #"object_refs":forms.CheckboxSelectMultiple(),
         }
-    def __init__(self, *args, **kwargs):
-        super(ReportForm, self).__init__(*args, **kwargs)
+    #def __init__(self, *args, **kwargs):
+    #    super(ReportForm, self).__init__(*args, **kwargs)
 
 class TypeSelectForm(forms.Form):
     types = forms.ModelMultipleChoiceField(

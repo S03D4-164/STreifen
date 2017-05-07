@@ -4,15 +4,16 @@ import STreifen.models as mymodels
 import STreifen.forms as myforms
 from ..models import *
 from ..forms import *
-import stix2
 
 def identity_list(request):
+    """
     identities = Identity.objects.all()
     rels = Relationship.objects.filter(
         Q(source_ref__object_id__startswith='identity')\
         |Q(target_ref__object_id__startswith='identity')\
     )
-    #print(rels.all())
+    print(rels.all())
+    """
     form = IdentityForm()
     if request.method == "POST":
         form = IdentityForm(request.POST)
@@ -21,7 +22,7 @@ def identity_list(request):
             return redirect("/identity/")
     c = {
         "form": form,
-        "identities": identities,
+        #"identities": identities,
     }
     return render(request, 'identity_list.html', c)
 
@@ -40,23 +41,30 @@ def _object_form(name, request=None, actor=None):
         return ThreatActorForm(post)
     return False
 
+def _get_related_obj(obj):
+    rels = Relationship.objects.filter(
+        Q(source_ref__object_id__startswith=obj.object_id)\
+        |Q(target_ref__object_id__startswith=obj.object_id)\
+    )
+    print(rels)
+    objects = [obj]
+    for rel in rels.all():
+        if not rel in objects:
+            objects.append(rel)
+        o = None
+        if rel.source_ref == obj.object_id:
+            o = get_obj_from_id(rel.target_ref)
+        elif rel.target_ref == obj.object_id:
+            o = get_obj_from_id(rel.source_ref)
+        if o:
+            if not o in objects:
+                objects.append(o)
+    return objects
+
 def identity_view(request, id):
     identity = Identity.objects.get(id=id)
     form = IdentityForm(instance=identity)
-    rels = Relationship.objects.filter(
-        Q(source_ref__object_id__startswith=identity.object_id)\
-        |Q(target_ref__object_id__startswith=identity.object_id)\
-    )
-    #print(rels)
-    #stix = stix_report(identity)
-    #print(stix)
-    drs = DefinedRelationship.objects.filter(
-        Q(source=identity.object_type)\
-        |Q(target=identity.object_type)
-    )
-    #print(drs)
-    drform = DefinedRelationshipForm()
-    drform.fields["relation"].queryset = drs
+    rels, objects = get_related_obj(identity)
     selected = None
     oform = None
     aoform = AddObjectForm()
@@ -68,7 +76,7 @@ def identity_view(request, id):
                 form.save()
                 redirect("/identity/"+id)
         elif 'delete' in request.POST:
-            identity.delete()
+            #identity.delete()
             return redirect("/identity/")
         elif 'relation' in request.POST:
             rid = request.POST.get('relation')
@@ -105,15 +113,13 @@ def identity_view(request, id):
                 report.save()
                 redirect("/report/"+id)
 
-    #objects = []
     c = {
         "identity":identity,
         "form": form,
-        "drform": drform,
         "selected": selected,
         "oform": oform,
         "aoform": aoform,
-        #"objects": objects,
-        #"stix":stix,
+        "rels": rels,
+        "objects": objects,
     }
     return render(request, 'identity_view.html', c)

@@ -4,15 +4,18 @@
 <title>Report</title>
 {% endblock %}
 
+{% block visjslib %}{% endblock %}
 {% block jquery %}
+<link rel="stylesheet" type="text/css" href="/static/stixviz/app.css" />
 <script>
 function ChangeRight(id){
     $.ajax({
         "url":"/report/"+id,
         "type":"GET",
         "success":function(result){
-            data = $(result).find("textarea#stix");
-            $("#stix").html(data);
+            data = $(result).find("#stix_tab");
+            $("#stix_tab").replaceWith(data);
+            document.getElementById('viz').addEventListener('click', handleTextarea, false);
         }
     });
 };
@@ -37,6 +40,7 @@ $(document).ready(
 
 {% block container %}
 
+{% block modal %}
 <div class="modal" id="report_form" role="dialog">
 <div class="modal-dialog">
 <div class="modal-content">
@@ -49,49 +53,57 @@ $(document).ready(
 <div class="modal-body">
 <form method=post>{% csrf_token %}
 
-<div><p>Name:</p>
-{{form.name}}
-</div>
-<hr>
 <div class="col-md-12">
 
-<div class="col-md-5">
-<p>Labels:</p>
-{{form.labels}}
-</div>
-
 <div class="col-md-7">
-<p>Description:</p>
-{{form.description}}
+Name:{{form.name}}
+<hr>
+Description:{{form.description}}
+</div>
+
+<div class="col-md-5">
+Labels:{{form.labels}}
 </div>
 
 </div>
 
-<input class="btn btn-primary btn-sm" type="submit" name="create" value="create">
+<input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
 </form>
 </div><!--/.modal-body-->
 
 </div><!--/.modal-content-->
 </div><!--/.modal-dialog-->
 </div><!--/.modal-->
+{% endblock %}
 
 <div class="col-md-12">
+
+<div id="canvas-container" class="hidden">
+<div class="panel panel-primary">
+<div class="panel-heading">
+<h1 id="header">Vizualize</h1>
+</div>
+<div class="panel-body">
+<div id="canvas-wrapper"><svg id="canvas"></svg></div>
+<div id="legend" class="sidebar">
+<h2>Legend</h2>
+<ul id="legend-content"></ul>
+</div>
+<div id="selected" class="sidebar">
+<h2>Selected Node</h2>
+<div id="selection"></div>
+</div>
+</div><!--/.pannel-body-->
+</div><!--/.pannel-->
+</div><!--/.canvas-container-->
 
 <div id="report_left" class="col-md-6">
 <h3 style="margin-top: 0">Report
 <a class="btn btn-primary btn-sm" data-toggle="modal" href="#report_form">Create</a>
+<a class="btn btn-info btn-sm" href="/timeline">Timeline</a>
 </h3>
 <hr>
-<div class="col-md-12">
-<ul class="nav nav-pills">
-<!--
-  <li class="active" ><a data-toggle="tab" href="#report">Report({{recordsTotal|length}})</a></li>
--->
-</ul>
 
-<div class="tab-content">
-
-<div class="tab-pane active" id="report" >
 <table id="report_table" class="table table-condensed table-stripe table-hover display" width="100%">
 <thead><tr>
 <th class="col-md-2">ID</th>
@@ -99,28 +111,27 @@ $(document).ready(
 <th class="col-md-4">Labels</th>
 </tr></thead>
 </table>
-</div><!--/#report-->
 
-</div><!--/tab-content-->
-
-</div><!--col-md--->
-
-</div><!--col-md-6-->
+</div><!--report_left-->
 
 <div id="report_right" class="col-md-6">
 <div class="panel panel-primary">
-
 <div class="panel-heading">
 STIX
 </div>
-
 <div class="panel-body">
-<div id="stix">
+<div id="stix_tab">
 <p>Click ID   -> view STIX</p>
 <p>Click Name -> view Report</p>
 </div>
 </div><!--/.panel-body-->
 </div><!--/.panel-->
 </div><!--/.col-md-6-->
+
+{% block stixvizlib %}
+<script type="text/javascript" src="/static/d3/d3.min.js"></script>
+<script type="text/javascript" src="/static/stixviz/stix2viz.js"></script>
+<script type="text/javascript" src="/static/stixviz/app.js"></script>
+{% endblock %}
 
 {% endblock %}

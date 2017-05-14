@@ -51,6 +51,7 @@ class SightingForm(forms.ModelForm):
             "sighting_of_ref",
             "first_seen",
             "last_seen",
+            "description",
         ]
 
 class ThreatActorForm(forms.ModelForm):
@@ -124,8 +125,6 @@ def get_related_obj(obj):
     )
     objects = [obj]
     for rel in rels.all():
-        #if not rel in objects:
-        #    objects.append(rel)
         o = None
         if rel.source_ref == obj.object_id:
             o = get_obj_from_id(rel.target_ref)
@@ -149,7 +148,7 @@ def get_obj_from_id(soi):
     return None
 
 def object_choices(ids=STIXObjectID.objects.all()):
-    choices = []
+    choices = [("","----------")]
     for soi in ids:
         obj = get_obj_from_id(soi)
         name = ""

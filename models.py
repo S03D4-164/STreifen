@@ -51,7 +51,8 @@ class STIXObject(models.Model):
         ordering = ["object_type", "object_id"]
     def delete(self):
         STIXObjectID.objects.get(object_id=self.object_id).delete()
-        
+    def __str__(self):
+        return self.object_id.object_id
 
 class ReportLabel(models.Model):
     value = models.CharField(max_length=250, unique=True)
@@ -89,6 +90,7 @@ class Report(STIXObject):
 
 class IdentityLabel(models.Model):
     value = models.CharField(max_length=250, unique=True)
+    category = models.CharField(max_length=250, blank=True, null=True)
     def __str__(self):
         return self.value
     class Meta:
@@ -131,6 +133,25 @@ class AttackPattern(STIXObject):
     def save(self, *args, **kwargs):
         self = _set_id(self, 'attack-pattern')
         super(AttackPattern, self).save(*args, **kwargs)
+    def __str__(self):
+        return self.name
+    class Meta:
+        ordering = ["name"]
+
+class ToolLabel(models.Model):
+    value = models.CharField(max_length=250, unique=True)
+    def __str__(self):
+        return self.value
+    class Meta:
+        ordering = ["value"]
+
+class Tool(STIXObject):
+    name = models.CharField(max_length=250, unique=True)
+    description = models.TextField(blank=True, null=True)
+    labels = models.ManyToManyField(ToolLabel, blank=True)
+    def save(self, *args, **kwargs):
+        self = _set_id(self, 'tool')
+        super(Tool, self).save(*args, **kwargs)
     def __str__(self):
         return self.name
     class Meta:
@@ -189,20 +210,24 @@ class Relationship(STIXObject):
     relationship_type = models.ForeignKey(RelationshipType)
     description = models.TextField(blank=True, null=True)
     def __str__(self):
-        src = self.source_ref.object_id
-        tgt = self.target_ref.object_id
-        rel = self.relationship_type.name
-        return " ".join([src, rel, tgt])
+        #src = self.source_ref.object_id
+        #tgt = self.target_ref.object_id
+        #rel = self.relationship_type.name
+        #return " ".join([src, rel, tgt])
+        return self.object_id.object_id
     def save(self, *args, **kwargs):
         self = _set_id(self, 'relationship')
         super(Relationship, self).save(*args, **kwargs)
 
 class Sighting(STIXObject):
-    first_seen = models.DateTimeField(blank=True, null=True)
-    last_seen = models.DateTimeField(blank=True, null=True)
     sighting_of_ref= models.ForeignKey(STIXObjectID, related_name='sighting_of_ref')
     where_sighted_refs = models.ManyToManyField(STIXObjectID, related_name='where_sighted_ref')
+    first_seen = models.DateTimeField()
+    last_seen = models.DateTimeField(blank=True, null=True)
     #observed_data_refs = models.ManyToManyField(STIXObjectID, related_name='observed_data_refs')
+    description = models.TextField(blank=True, null=True)
     def save(self, *args, **kwargs):
         self = _set_id(self, 'sighting')
         super(Sighting, self).save(*args, **kwargs)
+    def __str__(self):
+        return self.object_id.object_id

@@ -54,6 +54,31 @@ class ThreatActorData(BaseDatatableView):
                 | qs.filter(name__iregex=search)
         return qs.distinct()
 
+class MalwareData(BaseDatatableView):
+    model = Malware
+    columns = ['id', 'name', 'labels']
+    order_columns = ['id', 'name', 'labels']
+    max_display_length = 100
+    def render_column(self, row, column):
+        if column == 'id':
+            return '<a class="btn btn-default btn-xs">{0}</button>'.format(row.id)
+        elif column == 'name':
+            return '<a href="/malware/{0}">{1}</a>'.format(row.id,row.name)
+        elif column == 'labels':
+            l = []
+            for label in row.labels.all():
+                if not label.value in l:
+                    l.append(label.value)
+            return " / ".join(l)
+        else:
+            return super(MalwarerData, self).render_column(row, column)
+    def filter_queryset(self, qs):
+        search = self.request.GET.get(u'search[value]', None)
+        if search:
+            qs = qs.filter(labels__value__iregex=search) \
+                | qs.filter(name__iregex=search)
+        return qs.distinct()
+
 class IdentityData(BaseDatatableView):
     model = Identity
     columns = ['id', 'name', 'sectors', 'labels']

@@ -1,9 +1,5 @@
 {% extends "base_view.html" %}
 
-{% block title %}
-<title>Identity: {{identity.name}}</title>
-{% endblock %}
-
 {% block visjslib %}{% endblock %}
 {% block jquery %}
 <script>
@@ -27,10 +23,8 @@ $(document).ready(
 </script>
 {% endblock%}
 
-{% block container %}
-
 {% block modal %}
-<div class="modal" id="identity_form" role="dialog">
+<div class="modal" id="obj_form" role="dialog">
 <div class="modal-dialog"><div class="modal-content">
 <div class="modal-header">
 <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -54,40 +48,16 @@ Sectors:{{form.sectors}}
 </div><!--/.modal-dialog-->
 </div><!--/.modal-->
 
-<div class="modal" id="addobj_form" role="dialog">
+<div class="modal" id="sight_form" role="dialog">
 <div class="modal-dialog"><div class="modal-content">
 <div class="modal-header">
 <button type="button" class="close" data-dismiss="modal">&times;</button>
-<h4 class="modal-title">Add Object</h4>
+<h4 class="modal-title">Add Sighting</h4>
 </div>
 <div class="modal-body">
-<form id="add_form" method="post">{% csrf_token %}
-{{aoform}}
-<input class="btn btn-primary btn-sm" type="submit" name="add_obj" value="Add">
-</form>
-</div><!--/.modal-body-->
-</div><!--/.modal-content-->
-</div><!--/.modal-dialog-->
-</div><!--/.modal-->
-
-<div class="modal" id="object_form" role="dialog">
-<div class="modal-dialog"><div class="modal-content">
-<div class="modal-header">
-<button type="button" class="close" data-dismiss="modal">&times;</button>
-<h4 class="modal-title">Create Object</h4>
-</div>
-<div class="modal-body">
-<form id="select_form" method="post">{% csrf_token %}
-<div >{{drform}}</div>
-<div id="create_form" >
-{% if oform %}
-<hr>
-<table>
-{{oform.as_table}}
-</table>
-<input class="btn btn-primary btn-sm" type="submit" name="create_obj" value="Create">
-{% endif %}
-</div><!--/#create_form-->
+<form id="sight_form" method="post">{% csrf_token %}
+{{sform.as_p}}
+<input class="btn btn-primary btn-sm" type="submit" name="add_sight" value="Add">
 </form>
 </div><!--/.modal-body-->
 </div><!--/.modal-content-->
@@ -95,165 +65,3 @@ Sectors:{{form.sectors}}
 </div><!--/.modal-->
 {% endblock %}
 
-<div class="col-md-12" id="identity" >
-
-<div class="panel panel-primary">
-
-<div class="panel-heading">
-<h4>
-<a class="btn btn-default btn-xs" href="">{{identity.id}}</a>
-<a class="btn btn-warning btn-xs" data-toggle="modal" href="#identity_form">Edit</a>
-<a data-toggle="collapse" href="#identity_body" style="color:white">
-{{identity.name}}
-({{identity.object_id}})
-</a>
-</h4>
-</div><!--.panel-heading-->
-
-<div id="identity_body" class="panel-collapse collapse in">
-
-<div class="panel-body">
-
-<div class="col-md-12">
-
-<div class="col-md-3">
-<table class="table table-condensed">
-<tr><th class="col-md-3">Class</th>
-<td>{{identity.identity_class}}</td></tr>
-<tr><th >Sectors</th><td>
-{% for s in identity.sectors.all %}
-{{s.value}}<br>
-{% endfor %}
-</td></tr>
-<tr><th >Labels</th><td>
-{% for l in identity.labels.all %}
-{{l.value}}<br>
-{% endfor %}
-</td></tr>
-</table>
-</div>
-
-<div class="col-md-3">
-<table class="table table-condensed">
-<tr>
-<th class="col-md-4">Created</th><td>{{identity.created}}</td></tr>
-<th >Modified</th><td>{{identity.modified}}</td></tr>
-</table>
-</div>
-
-<div class="col-md-6">
-<table class="table table-condensed">
-<tr>
-<th class="col-md-3">Description</th>
-<td><pre>{{identity.description}}</pre></td>
-</tr>
-</table>
-</div>
-
-</div>
-
-</div><!--/.panel-body-->
-
-</div><!--/.collapse-->
-
-</div><!--/.panel-->
-
-</div><!--/report-->
-
-{% if stix %}
-<div class="col-md-12">
-<div class="panel panel-primary">
-<div class="panel-heading">
-<a data-toggle="collapse" href="#collapse2" style="color:white;">
-STIX
-</a></div><!--/.panel-heading-->
-<div id="collapse2"class="panel-collapse collapse">
-<div class="panel-body">
-<textarea id="stix" read-only style="height:500px;">{{stix}}</textarea>
-</div><!--/.panel-body-->
-</div><!--/.panel-collapse-->
-</div><!--/.panel-->
-</div>
-{% endif %}
-
-<div id="tables" class="col-md-12">
-<ul class="nav nav-pills">
-  <li class="active"><a data-toggle="tab" href="#relations">Relations</a></li>
-  <li><a data-toggle="tab" href="#objects">Related Objects</a></li>
-</ul>
-
-<div class="panel panel-primary">
-<div class="panel-heading"></div>
-<div class="panel-body">
-
-<div class="tab-content">
-
-<div class="tab-pane" id="objects" >
-<table id="objects_table" class="table table-condensed table-stripe table-hover display" width="100%">
-<thead><tr>
-<th class="col-sm-1">ID</th>
-<th class="col-sm-4">Type</th>
-<th class="col-sm-4">Name</th>
-<th class="col-sm-4">Object ID</th>
-</tr></thead>
-<tbody>
-{% for o in objects %}
-<tr>
-<td><a class="btn btn-primary btn-xs"href="/{{o.object_type.name}}/{{o.id}}">{{o.id}}</td>
-<td>{{o.object_type.name}}</td>
-<td>
-{{o.name}}
-</td>
-<td>{{o.object_id.object_id}}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div><!--/#-->
-
-<div class="tab-pane active" id="relations" >
-<a class="btn btn-primary btn-xs" data-toggle="modal" href="#relations_form">Create</a>
-<table id="relations_table" class="table table-condensed table-stripe table-hover display" width="100%">
-<thead>
-<th class="col-md-1">ID</th>
-<th class="col-md-6">Name</th>
-<th class="col-md-5">Ref</th>
-</thead>
-<tbody>
-{% for rel in rels %}
-<tr>
-<td>{{rel.id}}</td>
-<td>
-{% ifequal rel.object_type.name "relationship" %}
-
-{% for s in objects %}
-{% ifequal s.object_id rel.source_ref %}
-<span class="label label-primary">{{s.object_type}}</span> {{s.name}}
-{% endifequal %}
-{% endfor %}
-
-<span class="label label-default">{{rel.relationship_type.name}}</span>
-
-{% for t in objects %}
-{% ifequal t.object_id rel.target_ref %}
-<span class="label label-primary">{{t.object_type}}</span> {{t.name}}
-{% endifequal %}
-{% endfor %}
-
-{% endifequal %}
-</td>
-<td>{{rel.object_id}}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div><!--/#relations-->
-
-</div><!--/tab-content-->
-
-</div><!--/.panel-body-->
-</div><!--/.panel-->
-
-</div><!--/tables-->
-
-{% endblock %}

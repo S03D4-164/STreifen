@@ -53,15 +53,23 @@ class SightingForm(forms.ModelForm):
             "last_seen",
             "description",
         ]
+    def __init__(self, *args, **kwargs):
+        super(SightingForm, self).__init__(*args, **kwargs)
+        self.fields["where_sighted_refs"].choices = object_choices(
+            ids=STIXObjectID.objects.filter(
+                object_id__startswith="identity--",
+            ),
+            dummy=True
+        )
 
 class ThreatActorForm(forms.ModelForm):
     class Meta:
         model = ThreatActor
         fields = [
             "name",
-            "description",
             "labels",
             "aliases",
+            "description",
         ]
         #widgets = {
         #    "labels":forms.CheckboxSelectMultiple(),
@@ -90,7 +98,7 @@ class IdentityForm(forms.ModelForm):
         fields = [
             "name",
             "identity_class",
-            "sectors",
+            #"sectors",
             "labels",
             "description",
         ]
@@ -117,19 +125,33 @@ class SelectObjectForm(forms.Form):
             ]
         ),
     )
+    def __init__(self, *args, **kwargs):
+        super(SelectObjectForm, self).__init__(*args, **kwargs)
+        self.fields["type"].required = False
+
 
 def get_related_obj(obj):
     rels = Relationship.objects.filter(
         Q(source_ref__object_id__startswith=obj.object_id)\
         |Q(target_ref__object_id__startswith=obj.object_id)\
     )
+    print(rels)
+    sights = Sighting.objects.filter(
+        Q(where_sighted_refs__object_id__startswith=obj.object_id)\
+        |Q(sighting_of_ref__object_id__startswith=obj.object_id)\
+    )
     objects = [obj]
+    objdict = {}
     for rel in rels.all():
         o = None
         if rel.source_ref == obj.object_id:
-            o = get_obj_from_id(rel.target_ref)
+            if not rel.target_ref.object_id in objdict:
+                o = get_obj_from_id(rel.target_ref)
+                objdict[rel.target_ref.object_id] = o
         elif rel.target_ref == obj.object_id:
-            o = get_obj_from_id(rel.source_ref)
+            if not rel.source_ref.object_id in objdict:
+                o = get_obj_from_id(rel.source_ref)
+                objdict[rel.source_ref.object_id] = o
         if o:
             if not o in objects:
                 objects.append(o)
@@ -147,8 +169,10 @@ def get_obj_from_id(soi):
         logging.error("Object not found: "+soi.object_id)
     return None
 
-def object_choices(ids=STIXObjectID.objects.all()):
-    choices = [("","----------")]
+def object_choices(ids=STIXObjectID.objects.all(), dummy=False):
+    choices = []
+    if dummy:
+        choices = [("","----------")]
     for soi in ids:
         obj = get_obj_from_id(soi)
         name = ""
@@ -214,17 +238,24 @@ class ReportForm(forms.ModelForm):
         model = Report
         fields = [
             "name",
+            "created_by_ref",
+            "published",
             "labels",
             "description",
-            "published",
             #"object_refs",
         ]
         widgets = {
-            "labels":forms.CheckboxSelectMultiple(),
+            #"labels":forms.CheckboxSelectMultiple(),
             #"object_refs":forms.CheckboxSelectMultiple(),
         }
-    #def __init__(self, *args, **kwargs):
-    #    super(ReportForm, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super(ReportForm, self).__init__(*args, **kwargs)
+        self.fields["created_by_ref"].choices = object_choices(
+            ids=STIXObjectID.objects.filter(
+                object_id__startswith="identity--",
+            ),
+            dummy=True
+        )
 
 class TypeSelectForm(forms.Form):
     types = forms.ModelMultipleChoiceField(
@@ -239,3 +270,23 @@ class TypeSelectForm(forms.Form):
         super(TypeSelectForm, self).__init__(*args, **kwargs)
         self.fields["types"].required = False
         self.fields["relation"].required = False
+
+class IndicatorForm(forms.ModelForm):
+    class Meta:
+        model = Indicator
+        fields = [
+            "name",
+            "labels",
+            "description",
+            #"valid_from",
+            #"valid_until",
+            #"pattern",
+        ]
+
+class PatternForm(forms.ModelForm):
+    class Meta:
+        model = IndicatorPattern
+        fields = [
+            "property",
+            "value",
+        ]

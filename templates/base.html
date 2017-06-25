@@ -20,7 +20,12 @@
 <script type="text/javascript" charset="utf8" src="/static/datatables/js/jquery.dataTables.min.js"></script>
 {% endblock %}
 
-{% block visjslib %}
+{% block datetimepickerlib %}
+<link rel="stylesheet" type="text/css" href="/static/datetimepicker/build/jquery.datetimepicker.min.css">
+<script type="text/javascript" charset="utf8" src="/static/datetimepicker/build/jquery.datetimepicker.full.min.js"></script>
+{% endblock %}
+
+{% block vislib %}
 <link rel="stylesheet" type="text/css" href="/static/font-awesome/css/font-awesome.min.css">
 <link href="/static/vis/vis.min.css" type="text/css" rel="stylesheet"></link>
 <script type="text/javascript" src="/static/vis/vis.min.js"></script>
@@ -51,9 +56,15 @@
 
 <li><a href="/identity/">Identity</a></li>
 
+<li><a href="/malware/">Malware</a></li>
+
+<li><a href="/indicator/">Indicator</a></li>
+
 <li><a href="/timeline/">Timeline</a></li>
 
 <li><a href="/viz/drs/">Relationship</a></li>
+
+<li><a href="/admin/">Admin</a></li>
 
 </ul>
 </nav>

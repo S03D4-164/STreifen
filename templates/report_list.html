@@ -1,44 +1,8 @@
-{% extends "base.html" %}
+{% extends "base_list.html" %}
 
-{% block title %}
-<title>Report</title>
-{% endblock %}
-
-{% block visjslib %}{% endblock %}
-{% block jquery %}
+{% block vislib %}
 <link rel="stylesheet" type="text/css" href="/static/stixviz/app.css" />
-<script>
-function ChangeRight(id){
-    $.ajax({
-        "url":"/report/"+id,
-        "type":"GET",
-        "success":function(result){
-            data = $(result).find("#stix_tab");
-            $("#stix_tab").replaceWith(data);
-            document.getElementById('viz').addEventListener('click', handleTextarea, false);
-        }
-    });
-};
-$(document).ready(
-    function(){
-        $('a[data-toggle="tab"]').on( 'shown.bs.tab', function (e) {
-            $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust();
-        } );
-	$('#report_table').dataTable({
-            "processing":true,
-            "serverSide":true,
-            "ajax": "{% url 'report_data' %}",
-            "order":[0, 'desc'],
-        });
-        //$('#id_firstseen').datetimepicker({
-        //        format:'Y-m-d H:i'
-        //});
-    }
-);
-</script>
 {% endblock%}
-
-{% block container %}
 
 {% block modal %}
 <div class="modal" id="report_form" role="dialog">
@@ -76,8 +40,7 @@ Labels:{{form.labels}}
 </div><!--/.modal-->
 {% endblock %}
 
-<div class="col-md-12">
-
+{% block top_pane %}
 <div id="canvas-container" class="hidden">
 <div class="panel panel-primary">
 <div class="panel-heading">
@@ -96,24 +59,15 @@ Labels:{{form.labels}}
 </div><!--/.pannel-body-->
 </div><!--/.pannel-->
 </div><!--/.canvas-container-->
+{% endblock %}
 
-<div id="report_left" class="col-md-6">
-<h3 style="margin-top: 0">Report
-<a class="btn btn-primary btn-sm" data-toggle="modal" href="#report_form">Create</a>
-<a class="btn btn-info btn-sm" href="/timeline">Timeline</a>
-</h3>
-<hr>
-
-<table id="report_table" class="table table-condensed table-stripe table-hover display" width="100%">
-<thead><tr>
+{% block left_thead %}
 <th class="col-md-2">ID</th>
 <th class="col-md-6">Name</th>
-<th class="col-md-4">Labels</th>
-</tr></thead>
-</table>
+<th class="col-md-4">Publisher</th>
+{% endblock %}
 
-</div><!--report_left-->
-
+{% block right_pane %}
 <div id="report_right" class="col-md-6">
 <div class="panel panel-primary">
 <div class="panel-heading">
@@ -127,6 +81,7 @@ STIX
 </div><!--/.panel-body-->
 </div><!--/.panel-->
 </div><!--/.col-md-6-->
+{% endblock %}
 
 {% block stixvizlib %}
 <script type="text/javascript" src="/static/d3/d3.min.js"></script>
@@ -134,4 +89,3 @@ STIX
 <script type="text/javascript" src="/static/stixviz/app.js"></script>
 {% endblock %}
 
-{% endblock %}

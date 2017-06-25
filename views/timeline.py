@@ -42,9 +42,11 @@ def stix2timeline(stix):
                         "content": tgt.name,
                         "group": act["id"],
                         "start": sight.first_seen,
-                        "end": sight.last_seen,
+                        #"end": sight.last_seen,
                         "className":sight.type,
                     }
+                    if sight.last_seen:
+                        item["end"] = sight.last_seen
                     if tgt.sectors:
                         item["subgroup"] = tgt.sectors[0]
                     #if tgt.sectors.all():
@@ -119,8 +121,10 @@ def data_timeline(request=None, model=None, field=None):
                         "content": tgt.name,
                         "group": act["id"],
                         "start": sight.first_seen.isoformat(),
-                        "end": sight.last_seen.isoformat(),
+                        #"end": sight.last_seen.isoformat(),
                     }
+                    if sight.last_seen:
+                        item["end"] = sight.last_seen.isoformat()
                     if tgt.labels.all():
                         item["subgroup"] = tgt.labels.all()[0]
                     if tgt.sectors.all():

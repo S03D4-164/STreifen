@@ -3,8 +3,10 @@ from .models import *
 
 class ReportData(BaseDatatableView):
     model = Report
-    columns = ['id', 'name', 'labels']
-    order_columns = ['id', 'name', 'labels']
+    columns = ['id', 'name', 'published']
+    order_columns = ['id', 'name', 'published']
+    #columns = ['id', 'name', 'publisher']
+    #order_columns = ['id', 'name', 'publisher']
     max_display_length = 100
 
     def get_initial_queryset(self):
@@ -13,19 +15,20 @@ class ReportData(BaseDatatableView):
     def render_column(self, row, column):
         if column == 'id':
             return '<a onclick=ChangeRight({0}) class="btn btn-default btn-xs">{0}</button>'.format(row.id)
+        elif column == 'publisher':
+            p = Identity.objects.filter(object_id=row.created_by_ref)
+            if p.count() == 1:
+                return p[0].name
+            else:
+                return None
         elif column == 'name':
             return '<a href="/report/{0}">{1}</a>'.format(row.id,row.name)
-        elif column == 'labels':
-            l = ""
-            for label in row.labels.all():
-                l += label.value+"<br>"
-            return l
         else:
             return super(ReportData, self).render_column(row, column)
     def filter_queryset(self, qs):
         search = self.request.GET.get(u'search[value]', None)
         if search:
-            qs = qs.filter(labels__value__iregex=search) \
+            qs = qs.filter(published__value__iregex=search) \
                 | qs.filter(name__iregex=search)
         return qs.distinct()
 
@@ -78,6 +81,20 @@ class MalwareData(BaseDatatableView):
             qs = qs.filter(labels__value__iregex=search) \
                 | qs.filter(name__iregex=search)
         return qs.distinct()
+
+class IndicatorData(BaseDatatableView):
+    model = Indicator
+    columns = ['id', 'name', 'pattern']
+    order_columns = ['id', 'name', 'pattern']
+    max_display_length = 100
+    def render_column(self, row, column):
+        if column == 'pattern':
+            pattern = ""
+            for p in row.pattern.all():
+                pattern += p.value + "<br>"
+            return pattern
+        else:
+            return super(IndicatorData, self).render_column(row, column)
 
 class IdentityData(BaseDatatableView):
     model = Identity

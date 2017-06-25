@@ -1,0 +1,43 @@
+{% extends "base_list.html" %}
+
+{% block modal %}
+<div class="modal" id="objtype_form" role="dialog">
+<div class="modal-dialog">
+<div class="modal-content">
+
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal">&times;</button>
+<h4 class="modal-title">Create {{objtype}}</h4>
+</div>
+
+<div class="modal-body">
+<form method=post>{% csrf_token %}
+<div class="col-md-12">
+<div class="col-md-6">
+<table>
+{{form.as_table}}
+</table>
+</div>
+<div class="col-md-6">
+<table>
+{{pformset.as_table}}
+</table>
+</div>
+</div>
+<input class="btn btn-primary btn-sm" type="submit" name="create" value="create">
+</form>
+</div><!--/.modal-body-->
+
+</div><!--/.modal-content-->
+</div><!--/.modal-dialog-->
+</div><!--/.modal-->
+{% endblock %}
+
+{% block left_thead %}
+<th class="col-md-2">ID</th>
+<th class="col-md-4">Name</th>
+<th class="col-md-6">Pattern</th>
+{% endblock %}
+
+{% block right_pane %}
+{% endblock %}

@@ -1,42 +1,4 @@
-{% extends "base.html" %}
-
-{% block title %}
-<title>Identity</title>
-{% endblock %}
-
-{% block visjslib %}{% endblock %}
-{% block jquery %}
-<script>
-function ChangeRight(id){
-    $.ajax({
-        "url":"/report/"+id,
-        "type":"GET",
-        "success":function(result){
-            data = $(result).find("textarea#stix");
-            $("#stix").html(data);
-        }
-    });
-};
-$(document).ready(
-    function(){
-        $('a[data-toggle="tab"]').on( 'shown.bs.tab', function (e) {
-            $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust();
-        } );
-	$('#identity_table').dataTable({
-            "processing":true,
-            "serverSide":true,
-            "ajax": "{% url 'identity_data' %}",
-            "order":[0, 'desc'],
-        });
-        //$('#id_firstseen').datetimepicker({
-        //        format:'Y-m-d H:i'
-        //});
-    }
-);
-</script>
-{% endblock%}
-
-{% block container %}
+{% extends "base_list.html" %}
 
 {% block modal %}
 <div class="modal" id="identity_form" role="dialog">

@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load tz %}
 
 {% block title %}
 <title>{{obj.object_type.name|capfirst}}:{{obj.name}}</title>
@@ -37,17 +36,25 @@ $(document).ready(
                 }
             });
         });
-        //$('#id_firstseen').datetimepicker({
-        //        format:'Y-m-d H:i'
-        //});
+        $('#id_published').datetimepicker({
+                format:'Y-m-d H:i'
+        });
+        $('#id_first_seen').datetimepicker({
+                format:'Y-m-d H:i'
+        });
+        $('#id_last_seen').datetimepicker({
+                format:'Y-m-d H:i'
+        });
     }
 );
 </script>
 {% endblock%}
 
+{% block message %}{% endblock %}
+
 {% block container %}
 
-{% block modal %}
+{% block delete %}
 <div class="modal" id="delete_form" role="dialog">
 <div class="modal-dialog"><div class="modal-content">
 <div class="modal-header">
@@ -58,13 +65,15 @@ $(document).ready(
 <h3>Are you sure?</h3>
 <form method="post">{% csrf_token %}
 <input class="btn btn-xs btn-danger" type="submit" name="delete" value="Yes, Delete">
-<button class="btn btn-md btn-primary" data-dismiss="modal">No</button>
+<button class="btn btn-md btn-primary" data-dismiss="modal">No, Close</button>
 </form>
 </div><!--/.modal-body-->
 </div><!--/.modal-content-->
 </div><!--/.modal-dialog-->
 </div><!--/.modal-->
+{% endblock %}
 
+{% block modal %}
 <div class="modal" id="add_form" role="dialog">
 <div class="modal-dialog"><div class="modal-content">
 <div class="modal-header">
@@ -74,7 +83,10 @@ $(document).ready(
 <div class="modal-body">
 <form method="post">{% csrf_token %}
 <div id="select_add">Filter:{{soform.type}}</div>
-<div id="add_object">{{aoform}}</div>
+<hr>
+<div id="add_object">
+{{aoform.objects}}
+</div>
 <input class="btn btn-primary btn-sm" type="submit" name="add_obj" value="Add">
 </form>
 </div><!--/.modal-body-->
@@ -91,10 +103,10 @@ $(document).ready(
 <div class="modal-body">
 <form method="post">{% csrf_token %}
 <div id="select_create">Select:{{soform.type}}</div>
+<br>
 <div id="create_object" >
 {% if coform %}
-<hr>
-<table>
+<table class="table">
 {{coform.as_table}}
 </table>
 <input class="btn btn-info btn-sm" type="submit" name="create_obj" value="Create">
@@ -107,11 +119,30 @@ $(document).ready(
 </div><!--/.modal-->
 {% endblock %}
 
-{% block modal_edit %}{% endblock %}
+{% block edit %}
+<div class="modal" id="obj_form" role="dialog">
+<div class="modal-dialog"><div class="modal-content">
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal">&times;</button>
+<h4 class="modal-title">Edit Report</h4>
+</div>
+<div class="modal-body">
+<form method="post">{% csrf_token %}
+<table class="table">
+{{form.as_table}}
+</table>
+<input class="btn btn-primary btn-sm" type="submit" name="update" value="Update">
+</form>
+</div><!--/.modal-body-->
+</div><!--/.modal-content-->
+</div><!--/.modal-dialog-->
+</div><!--/.modal-->
+{% endblock %}
 
-{% if obj %}
-<div id="obj" class="col-md-12">
-<div class="panel panel-primary">
+<div id="view" class="col-md-12">
+
+{% block top_pane %}
+<div id="obj_panel" class="panel panel-primary">
 <div class="panel-heading">
 <h4>
 <a class="btn btn-default btn-xs" href="">{{obj.id}}</a>
@@ -123,56 +154,37 @@ $(document).ready(
 </h4>
 </div><!--.panel-heading-->
 
-<div id="obj_body" class="panel-collapse collapse in">
+<div id="obj_body" class="panel-collapse collapse ">
 
 <div class="panel-body">
 
-<div class="col-md-12">
-
-{% block object %}
-<div class="col-md-3">
 <table class="table table-condensed">
+<tr><th class="col-md-3">Created / Modified</th><td>{{obj.created}} / {{obj.modified}}</td></tr>
 <tr><th class="col-md-3">Labels</th>
 <td>
 {% for l in obj.labels.all %}
 {{l.value}}<br>
 {% endfor %}
 </td></tr>
-</table>
-</div>
 
-<div class="col-md-3">
-<table class="table table-condensed">
-<tr>
-<th class="col-md-4">Created</th><td>{{obj.created}}</td></tr>
-<th >Modified</th><td>{{obj.modified}}</td></tr>
+{% block property %}
 {% ifequal obj.object_type.name "report"%}
-<th >Published</th><td>{{obj.published}}</td>
+<tr><th >Published</th><td>{{obj.published}}</td></tr>
 {% endifequal %}
-</tr>
-</table>
-</div>
+{% endblock %}
 
-<div class="col-md-6">
-<table class="table table-condensed">
 <tr>
 <th class="col-md-3">Description</th>
 <td><pre>{{obj.description}}</pre></td>
 </tr>
 </table>
-</div>
-
-</div>
-{% endblock %}
 
 </div><!--/.panel-body-->
 </div><!--/.collapse-->
 </div><!--/.panel-->
-</div><!--/-->
-{% endif %}
+{% endblock %}
 
-{% block stixviz %}
-<div id="stixviz" class="col-md-12">
+{% block middle_pane %}
 
 <div id="canvas-container" class="hidden">
 
@@ -180,48 +192,65 @@ $(document).ready(
 <div class="panel-heading">
 <h1 id="header">Vizualize</h1>
 </div>
+
 <div class="panel-body">
+
 <div id="canvas-wrapper"><svg id="canvas"></svg></div>
+
 <div id="legend" class="sidebar">
 <h2>Legend</h2>
 <ul id="legend-content"></ul>
 </div>
+
 <div id="selected" class="sidebar">
 <h2>Selected Node</h2>
 <div id="selection"></div>
-</div>
+</div><!--/#selected-->
 
+</div><!--/.panel-body-->
+</div><!--/.panel-->
 </div><!--/#canvas-container-->
 
+{% if stix %}
+<div id="stix_panel" class="panel panel-primary">
+<div class="panel-heading">
+<a data-toggle="collapse" href="#stix_body" style="color:white">
+STIX
+</a>
 </div>
-</div>
-</div><!--/#stixviz-->
+<div id="stix_body" class="panel-collapse collapse ">
+<div class="panel-body">
+{% if obj %}<a class="btn btn-primary btn-xs" href="/{{obj.object_type.name}}/{{obj.id}}.json">Full</a>{% endif %}
+<button class="btn btn-primary btn-xs" id="viz" onclick=toggleViz("stixtext")>Vizualize</button>
+<textarea id="stixtext" read-only style="height:500px;">{{stix}}</textarea>
+</div><!--/.panel_body-->
+</div><!--/#stix_body-->
+</div><!--/#stix_panel-->
+{% endif %}
+
 {% endblock %}
 
-{% block table %}
-<div id="tables" class="col-md-12">
+{% block bottom_pane %}
 
 <ul class="nav nav-pills">
 <li class="active"><a data-toggle="tab" href="#objects">Objects</a></li>
 {% if rels %}<li><a data-toggle="tab" href="#relations">Relations</a></li>{% endif %}
 {% if sights %}<li><a data-toggle="tab" href="#sightings">Sightings</a></li>{% endif %}
-{% if stix %}<li><a data-toggle="tab" href="#stix_tab">STIX</a></li>{% endif %}
 </ul>
 <div class="panel panel-primary">
 <div class="panel-heading"></div>
 <div class="panel-body">
+{% ifequal obj.object_type.name "report" %}
+<a class="btn btn-primary btn-xs" data-toggle="modal" href="#add_form">Add</a>
+<a class="btn btn-info btn-xs" data-toggle="modal" href="#create_form">Create</a>
+<a class="btn btn-warning btn-xs" data-toggle="modal" href="#detach_form">Detach</a>
+{% endifequal %}
+
+{% ifequal obj.object_type.name "identity" %}
+<a class="btn btn-primary btn-xs" data-toggle="modal" href="#sight_form">Sighting</a>
+{% endifequal %}
 
 <div class="tab-content">
-
-{% if stix %}
-<div class="tab-pane" id="stix_tab" >
-{% if obj %}<a class="btn btn-primary btn-xs" href="/{{obj.object_type.name}}/{{obj.id}}.json">Full</a>{% endif %}
-<button class="btn btn-primary btn-xs" id="viz" onclick=toggleViz("stixtext")>Vizualize</button>
-<textarea id="stixtext" read-only style="height:500px;">{{stix}}</textarea>
-</div><!--/#stix_tab-->
-
-
-{% endif %}
 
 {% if sights %}
 <div class="tab-pane" id="sightings" >
@@ -305,9 +334,6 @@ $(document).ready(
 {% endif %}
 
 <div class="tab-pane active" id="objects" >
-<a class="btn btn-primary btn-xs" data-toggle="modal" href="#add_form">Add</a>
-<a class="btn btn-info btn-xs" data-toggle="modal" href="#create_form">Create</a>
-<a class="btn btn-warning btn-xs" data-toggle="modal" href="#detach_form">Detach</a>
 
 <table id="objects_table" class="table table-condensed table-stripe table-hover display" width="100%">
 <thead><tr>

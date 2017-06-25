@@ -8,18 +8,22 @@ from .views.report import report_list, report_view, stix_report
 from .views.actor import actor_list, actor_view, actor_viz
 from .views.malware import malware_list, malware_view
 from .views.identity import identity_list, identity_view
-from .tables import ReportData, ThreatActorData, IdentityData, MalwareData
+from .views.indicator import indicator_list, indicator_view
+from .tables import ReportData, ThreatActorData, IdentityData, MalwareData, IndicatorData
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^report/$', report_list),
     url(r'^actor/$', actor_list),
+    url(r'^threat-actor/$', actor_list),
     url(r'^malware/$', malware_list),
     url(r'^identity/$', identity_list),
+    url(r'^indicator/$', indicator_list),
     url(r'^data/report/', ReportData.as_view(), name="report_data"),
-    url(r'^data/actor/', ThreatActorData.as_view(), name="threatactor_data"),
+    url(r'^data/threat-actor/', ThreatActorData.as_view(), name="threatactor_data"),
     url(r'^data/malware/', MalwareData.as_view(), name="malware_data"),
     url(r'^data/identity/', IdentityData.as_view(), name="identity_data"),
+    url(r'^data/indicator/', IndicatorData.as_view(), name="inicator_data"),
     url(r'^report/(?P<id>\d+)$', report_view),
     url(r'^report/(?P<id>\d+).json$', stix_report),
     url(r'^malware/(?P<id>\d+)$', malware_view),

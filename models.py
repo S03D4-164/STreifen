@@ -7,13 +7,6 @@ class STIXObjectType(models.Model):
     class Meta:
         ordering = ["name"]
 
-class MarkingDefinitionObjectType(models.Model):
-    name = models.CharField(max_length=250, unique=True)
-    def __str__(self):
-        return self.name
-    class Meta:
-        ordering = ["name"]
-
 class STIXObjectID(models.Model):
     object_id = models.CharField(max_length=250, unique=True)
     def __str__(self):
@@ -44,8 +37,8 @@ class STIXObject(models.Model):
     object_id = models.OneToOneField(STIXObjectID, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
-    #createdby_ref = models.ForeignKey(STIXObjectID, related_name="createdby_ref")
-    #object_marking_ref = models.ForeignKey(MarkingObjectID)
+    created_by_ref = models.ForeignKey(STIXObjectID, related_name="createdby_ref", null=True)
+    #object_marking_refs = models.ManyToManyField(STIXObjectID, blank=True)
     class Meta:
         unique_together = (("object_type", "object_id"),)
         ordering = ["object_type", "object_id"]
@@ -53,6 +46,20 @@ class STIXObject(models.Model):
         STIXObjectID.objects.get(object_id=self.object_id).delete()
     def __str__(self):
         return self.object_id.object_id
+
+class MarkingDefinition(STIXObject):
+    DEFINITION_TYPE_CHOICES = {
+        ('statement','statement'),
+        ('tlp','tlp'),
+    }
+    #object_marking_refs = models.ManyToManyField(STIXObjectID)
+    definition_type = models.CharField(max_length=250, choices=DEFINITION_TYPE_CHOICES)
+    definition =  models.CharField(max_length=250)
+    class Meta:
+        unique_together = (("definition_type", "definition"),)
+        ordering = ["definition_type", "definition"]
+    def __str__(self):
+        return ":".join([definition_type,definition])
 
 class ReportLabel(models.Model):
     value = models.CharField(max_length=250, unique=True)
@@ -184,7 +191,7 @@ class ThreatActorLabel(models.Model):
         ordering = ["value"]
 
 class ThreatActorAlias(models.Model):
-    name = models.CharField(max_length=250, unique=True)
+    name = models.CharField(max_length=250, unique=True, blank=False)
     description = models.TextField(blank=True, null=True)
     def __str__(self):
         return self.name
@@ -192,7 +199,7 @@ class ThreatActorAlias(models.Model):
         ordering = ["name"]
 
 class ThreatActor(STIXObject):
-    name = models.CharField(max_length=250, unique=True)
+    name = models.CharField(max_length=250, unique=True, blank=False)
     description = models.TextField(blank=True, null=True)
     labels = models.ManyToManyField(ThreatActorLabel, blank=True)
     aliases = models.ManyToManyField(ThreatActorAlias, blank=True)
@@ -231,3 +238,52 @@ class Sighting(STIXObject):
         super(Sighting, self).save(*args, **kwargs)
     def __str__(self):
         return self.object_id.object_id
+
+class IndicatorLabel(models.Model):
+    value = models.CharField(max_length=250, unique=True)
+    def __str__(self):
+        return self.value
+    class Meta:
+        ordering = ["value"]
+
+class ObservableObjectType(models.Model):
+    name = models.CharField(max_length=250, unique=True)
+    def __str__(self):
+        return self.name
+    class Meta:
+        ordering = ["name"]
+
+class ObservableObjectProperty(models.Model):
+    type = models.ForeignKey(ObservableObjectType)
+    name = models.CharField(max_length=250)
+    alias = models.CharField(max_length=250, unique=True, blank=True, null=True)
+    class Meta:
+        unique_together = (("type", "name"),)
+        ordering = ["type", "name"]
+    def __str__(self):
+        return self.type.name + ":" + self.name
+    class Meta:
+        ordering = ["type", "name"]
+
+class IndicatorPattern(models.Model):
+    property = models.ForeignKey(ObservableObjectProperty)
+    value = models.CharField(max_length=25000)
+    description = models.TextField(blank=True, null=True)
+    def __str__(self):
+        o = self.property.type.name + ":" + self.property.name
+        o += "=" + self.value
+        return o
+    class Meta:
+        unique_together = (("property", "value"),)
+        ordering = ["property", "value"]
+
+class Indicator(STIXObject):
+    name = models.CharField(max_length=250, unique=True)
+    description = models.TextField(blank=True, null=True)
+    labels = models.ManyToManyField(IndicatorLabel)
+    valid_from = models.DateTimeField(blank=True, null=True)
+    valid_until = models.DateTimeField(blank=True, null=True)
+    pattern = models.ManyToManyField(IndicatorPattern)
+    def save(self, *args, **kwargs):
+        self = _set_id(self, 'indicator')
+        super(Indicator, self).save(*args, **kwargs)
